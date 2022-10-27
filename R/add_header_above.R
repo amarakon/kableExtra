@@ -57,12 +57,12 @@
 #' }
 #'
 #' @export
-add_header_above <- function(kable_input, header = NULL,
+add_header_above <- function(kable_input, header = NULL, cline = NULL,
                              bold = FALSE, italic = FALSE, monospace = FALSE,
                              underline = FALSE, strikeout = FALSE,
                              align = "c", color = NULL, background = NULL,
                              font_size = NULL, angle = NULL,
-                             escape = TRUE, line = TRUE, line_sep = 3,
+                             escape = TRUE, line = TRUE, line_sep = NULL,
                              extra_css = NULL, include_empty = FALSE,
                              border_left = FALSE, border_right = FALSE) {
   if (is.null(header)) return(kable_input)
@@ -108,7 +108,7 @@ add_header_above <- function(kable_input, header = NULL,
   }
   if (kable_format == "latex") {
     return(pdfTable_add_header_above(
-      kable_input, header, bold, italic, monospace, underline, strikeout,
+      kable_input, header, cline, bold, italic, monospace, underline, strikeout,
       align, color, background, font_size, angle, escape, line, line_sep,
       border_left, border_right))
   }
@@ -256,8 +256,10 @@ htmlTable_new_header_generator <- function(header_df, bold, italic, monospace,
     }
   }
 
-  line_sep <- ez_rep(line_sep, nrow(header_df))
-  line_sep <- glue::glue('padding-left:{line_sep}px;padding-right:{line_sep}px;')
+  if (!is.null(line_sep)) {
+    line_sep <- ez_rep(line_sep, nrow(header_df))
+    line_sep <- glue::glue('padding-left:{line_sep}px;padding-right:{line_sep}px;')
+  }
 
   row_style <- sprintf(row_style, align)
 
@@ -277,7 +279,7 @@ htmlTable_new_header_generator <- function(header_df, bold, italic, monospace,
 }
 
 # Add an extra header row above the current header in a LaTeX table ------
-pdfTable_add_header_above <- function(kable_input, header, bold, italic,
+pdfTable_add_header_above <- function(kable_input, header, cline, bold, italic,
                                       monospace, underline, strikeout, align,
                                       color, background, font_size, angle,
                                       escape, line, line_sep,
@@ -309,7 +311,7 @@ pdfTable_add_header_above <- function(kable_input, header, bold, italic,
 
   hline_type <- switch(table_info$booktabs + 1, "\\\\hline", "\\\\toprule")
   new_header_split <- pdfTable_new_header_generator(
-    header, table_info$booktabs, bold, italic, monospace, underline, strikeout,
+    table_info$colnames, header, cline, table_info$booktabs, bold, italic, monospace, underline, strikeout,
     align, color, background, font_size, angle, line_sep,
     border_left, border_right)
   if (line) {
@@ -339,7 +341,7 @@ ez_rep <- function(x, n) {
   return(x)
 }
 
-pdfTable_new_header_generator <- function(header_df, booktabs = FALSE,
+pdfTable_new_header_generator <- function(colnames, header_df, cline, booktabs = FALSE,
                                           bold, italic, monospace,
                                           underline, strikeout, align,
                                           color, background, font_size, angle,
@@ -383,8 +385,8 @@ pdfTable_new_header_generator <- function(header_df, booktabs = FALSE,
   }
   if (!is.null(font_size)) {
     header <- paste0("\\\\bgroup\\\\fontsize\\{", font_size, "\\}\\{",
-                     as.numeric(font_size) + 2,
-                     "\\}\\\\selectfont ", header, "\\\\egroup\\{\\}")
+      as.numeric(font_size) + 2,
+      "\\}\\\\selectfont ", header, "\\\\egroup\\{\\}")
   }
   if (!is.null(angle)) {
     header <- paste0("\\\\rotatebox\\{", angle, "\\}\\{", header, "\\}")
@@ -394,22 +396,59 @@ pdfTable_new_header_generator <- function(header_df, booktabs = FALSE,
   )
 
   header_text <- paste(paste(header_items, collapse = " & "), "\\\\\\\\")
-  cline <- cline_gen(header_df, booktabs, line_sep)
+
+  if (is.null(cline))
+    cline <- cline_gen(colnames, header_df, booktabs, line_sep)
+
+  true_cline <- ""
+  dir <- ""
+  cmd <- ""
+  if (!booktabs)
+    cmd <- "\\\\cline"
+
+  # Add `line_sep` to directions of column lines
+  dirsep <- function(dir) {
+    unit_sep <- ""
+    if (!is.null(line_sep))
+      unit_sep <- paste("{", line_sep, " pt}", sep = "")
+    return(paste(dir, unit_sep, sep = ""))
+  }
+
+  for (v in cline) {
+    if (nchar(v) == 1)
+      v <- paste(v, "-", v, sep = "")
+
+    if (booktabs) {
+      # Left edge of the table
+      if (str_sub(v, 1, 1) == 1)
+        dir <- dirsep("r")
+      # Right edge of the table
+      else if (str_sub(v, -1) == tail(cumsum(header_df$colspan), 1))
+        dir <- dirsep("l")
+      # Middle of the table
+      else
+        dir <- paste(dirsep("l"), dirsep("r"), sep = "")
+
+      cmd <- paste("\\\\cmidrule(", dir, ")", sep = "")
+    }
+
+    true_cline <- paste(true_cline, cmd, "{", v, "} ", sep = "")
+  }
+  cline <- str_sub(true_cline, end = -2)
   return(c(header_text, cline))
 }
 
-cline_gen <- function(header_df, booktabs, line_sep) {
+cline_gen <- function(colnames, header_df, booktabs, line_sep) {
   cline_end <- cumsum(header_df$colspan)
   cline_start <- c(0, cline_end) + 1
-  cline_start <- cline_start[-length(cline_start)]
-  cline_type <- switch(
-    booktabs + 1,
-    "\\\\cline{",
-    glue::glue("\\\\cmidrule(l{[line_sep]pt}r{[line_sep]pt}){",
-               .open = "[", .close = "]"))
-  cline <- paste0(cline_type, cline_start, "-", cline_end, "}")
-  cline <- cline[trimws(header_df$header) != ""]
-  cline <- paste(cline, collapse = " ")
+  cline <- c()
+  for (i in 2:length(cline_start)) {
+    j = i - 1
+    if (!"" %in% c(trimws(header_df$header[j]), trimws(colnames[j]))) {
+      cline <- c(cline,
+        paste(cline_start[j], "-", cline_start[i] - 1, sep = ""))
+    }
+  }
   return(cline)
 }
 
@@ -419,4 +458,3 @@ switch_align <- function(x) {
   }
   return(x)
 }
-
