@@ -397,8 +397,27 @@ pdfTable_new_header_generator <- function(colnames, header_df, cline, booktabs =
 
   header_text <- paste(paste(header_items, collapse = " & "), "\\\\\\\\")
 
-  if (is.null(cline))
+  # Function to check if there is a vector with more than two arguments
+  vecargs <- function(len) {
+    if (len > 2)
+      stop("Vector arguments for `cline` cannot have a length greater than 2")
+  }
+
+  if (is.data.frame(cline)) {
+    vecargs(nrow(cline))
+    new_cline <- NULL
+    for (v in cline)
+      new_cline <- c(new_cline, paste(v[1], v[2], sep = "-"))
+    cline <- new_cline
+  } else if (is.vector(cline)) {
+    vecargs(length(cline))
+    cline <- paste(cline, collapse = "-")
+  } else if (is.character(cline)) {
+    return(c(header_text, cline))
+  } else {
     cline <- cline_gen(colnames, header_df, booktabs, line_sep)
+  }
+
 
   true_cline <- ""
   dir <- ""

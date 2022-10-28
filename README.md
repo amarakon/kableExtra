@@ -1,3 +1,29 @@
+# Amarakon’s Fork of kableExtra
+
+kableExtra is no longer maintained by its original author. Despine this, it
+still has its issues, especially when outputting to LaTeX/PDF. The purpose of
+this fork is to fix the abondoned problems with kableExtra to finally create the
+perfect package for creating tables in R (Markdown).
+
+## Changes
+
+- [x] Generate column lines for `add_header_above()` more smartly:
+  ![Example](preview.png)
+
+- [x] Add the ability to use custom column lines for `add_header_above()`:
+  This is usually not needed because it automatically generates them for you.
+  However, To do this, you can use the `cline` argument for
+  `add_header_above()`. This argument takes either a data frame, a string, or a
+  vector. It is usually used with a data frame. The following code will add
+  column lines between columns and 2 and columns 3 and 4:
+
+  ```r
+  kableExtra::add_header_above("Position (m)" = 2, "Displacement (m)" = 2,
+    data.frame(c(1, 2), c(3, 4))
+  ```
+
+---
+
 # kableExtra <img src="https://haozhu233.github.io/kableExtra/kableExtra.svg" align="right" alt="logo" width="120" height = "139" style = "border: none; float: right;">
 [![CRAN_version](http://www.r-pkg.org/badges/version/kableExtra)](https://cran.r-project.org/package=kableExtra)
 [![CRAN_download](http://cranlogs.r-pkg.org/badges/kableExtra)](https://cran.r-project.org/package=kableExtra)
@@ -30,7 +56,7 @@ This package can load required LaTeX package automatically in vanilla rmarkdown.
 `kableExtra` is NOT a table generating package. It is a package that can **"add features"** to a `kable()` output using a syntax that every useR loves - the [pipes `%>%`](https://r4ds.had.co.nz/pipes.html). We see similar approaches to deal with plots in packages like `ggvis` and `plotly`. There is no reason why we cannot use it with tables.
 
 ### Unified functions for both HTML and PDF
-Most functionalities in `kableExtra` can work in both HTML and PDF. In fact, as long as you specifies format in `kable()` (which can be set globally through option `knitr.table.format`), functions in this package will pick the right way to manipulate the table be themselves. As a result, if users want to left align the table, `kable(...) %>% kable_styling(position = "left")` will work in both HTML and PDF. Recently, we also introduced a new `kbl()` function acting as an alternative to `kable` but provides better documentation and format detection. 
+Most functionalities in `kableExtra` can work in both HTML and PDF. In fact, as long as you specifies format in `kable()` (which can be set globally through option `knitr.table.format`), functions in this package will pick the right way to manipulate the table be themselves. As a result, if users want to left align the table, `kable(...) %>% kable_styling(position = "left")` will work in both HTML and PDF. Recently, we also introduced a new `kbl()` function acting as an alternative to `kable` but provides better documentation and format detection.
 
 ## Install
 ```r
