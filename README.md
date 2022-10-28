@@ -18,7 +18,7 @@ perfect package for creating tables in R (Markdown).
   column lines between columns and 2 and columns 3 and 4:
 
   ```r
-  kableExtra::add_header_above("Position (m)" = 2, "Displacement (m)" = 2,
+  kableExtra::add_header_above(c("Position (m)" = 2, "Displacement (m)" = 2),
     data.frame(c(1, 2), c(3, 4))
   ```
 
