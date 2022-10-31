@@ -7,6 +7,7 @@
 add_header_above(
   kable_input,
   header = NULL,
+  cline = NULL,
   bold = FALSE,
   italic = FALSE,
   monospace = FALSE,
@@ -19,7 +20,7 @@ add_header_above(
   angle = NULL,
   escape = TRUE,
   line = TRUE,
-  line_sep = 3,
+  line_sep = NULL,
   extra_css = NULL,
   include_empty = FALSE,
   border_left = FALSE,
