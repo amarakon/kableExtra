@@ -22,6 +22,15 @@ perfect package for creating tables in R (Markdown).
     data.frame(c(1, 2), c(3, 4))
   ```
 
+- [x] Add the ability to supply `group_rows` a range of rows. The following
+  three lines of code will produce the same result:
+
+  ```r
+  kableExtra::group_rows(kable_input, group_label, 1:5)
+  kableExtra::group_rows(kable_input, group_label, c(1, 5))
+  kableExtra::group_rows(kable_input, group_label, 1, 5)
+  ```
+
 ---
 
 # kableExtra <img src="https://haozhu233.github.io/kableExtra/kableExtra.svg" align="right" alt="logo" width="120" height = "139" style = "border: none; float: right;">

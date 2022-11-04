@@ -6,9 +6,11 @@
 #' @param group_label A character string for the name of the group
 #' @param start_row A numeric value that tells the function in which row the
 #' group starts. Note that the counting excludes header rows and other group
-#' labeling rows
+#' labeling rows. Could also be a vector that tells the function in which row
+#' the group starts and ends. (In this case, `end_row` should be `NULL`.)
 #' @param end_row A numeric value that tells the function in which row the group
-#' ends.
+#' ends. Could also be a vector that tells the function in which row the group
+#' starts and ends. (In this case, `start_row` should be `NULL`.)
 #' @param index A named vector providing the index for robust row-grouping tasks.
 #' Basically, you can use it in the same way as `add_header_above()`.
 #' @param label_row_css A character string for any customized css used for the
@@ -81,6 +83,13 @@ group_rows <- function(kable_input, group_label = NULL,
   }
 
   if (is.null(index)) {
+    if (is.vector(start_row) && is.null(end_row)) {
+      end_row <- tail(start_row, 1)
+      start_row <- start_row[1]
+    } else if(is.vector(end_row) && is.null(start_row)) {
+      start_row <- end_row[1]
+      end_row <- tail(end_row, 1)
+    }
     if (kable_format == "html") {
       if (!missing(latex_align)) warning("latex_align parameter is not used in HTML Mode,
                                     use label_row_css instead.")

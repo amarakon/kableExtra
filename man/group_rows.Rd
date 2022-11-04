@@ -62,10 +62,12 @@ pack_rows(
 
 \item{start_row}{A numeric value that tells the function in which row the
 group starts. Note that the counting excludes header rows and other group
-labeling rows}
+labeling rows. Could also be a vector that tells the function in which row
+the group starts and ends. (In this case, \code{end_row} should be \code{NULL}.)}
 
 \item{end_row}{A numeric value that tells the function in which row the group
-ends.}
+ends. Could also be a vector that tells the function in which row the group
+starts and ends. (In this case, \code{start_row} should be \code{NULL}.)}
 
 \item{index}{A named vector providing the index for robust row-grouping tasks.
 Basically, you can use it in the same way as \code{add_header_above()}.}
